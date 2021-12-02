@@ -45,6 +45,7 @@ ggplot(temp %>% filter(FlightDate >= earliest11 & FlightDate <= latest11), aes(f
   labs(title = paste("Observations by Date by Hive from", earliest11, "through", latest11), 
        x = "Date", y = "# Observations")
 ```
+
 Concerns this creates:
 Distorts measures of drift (movement between hives)
 Distorts # of flights per bee
@@ -59,7 +60,8 @@ flights <- result$flights %>% mutate(DepHive = as.factor(DepHive),
                                      Duration = as.numeric(Duration)/60)
 print(paste("# Flights:", nrow(flights)))
 print(paste("# of observations used in these flight (2 x nFlights):", 2 * nrow(flights)))
-print(paste("% of observations used in these flight:", round(100 * 2 * nrow(flights) / result$nObs, 0)))
+print(paste0("% of observations used in these flight: ", 
+             round(100 * 2 * nrow(flights) / result$nObs, 0), "%"))
 print(paste("# Bees with flights:", length(unique(flights$TAG))))
 ```
 
@@ -76,8 +78,9 @@ ggplot(temp, aes(x = "All Bees", y = Count)) + geom_boxplot() + ylab("Number of 
   xlab("") + labs(title = "Boxplot of Number of Flights By a Drone")
 ```
 ```{r FlightsByBee}
-ggplot(flights, aes(x = Departure, y = TAG)) + 
-  geom_point(aes(colour = DepHive, size = as.numeric(Duration)))
+ggplot(flights %>% mutate(Duration = pmin(as.numeric(Duration), 60)), aes(x = Departure, y = TAG)) + 
+  geom_point(aes(colour = DepHive, size = Duration), shape = 16, alpha = .5) +
+  xlab("Departure Date") + labs(title = "Fight Date and Duration by Drone")
 ```
 
 ## How long (duration) are the flights?
@@ -92,7 +95,7 @@ ggplot2::qplot(flights %>% filter(Duration <= 120) %>% pull(Duration), bins = 30
   ylab("Number of Flights by Flight Duration") +
   labs(title = "Frequency By Flight Duration (max 120 minutes)")
 
-ggplot(flights, aes(x = as.numeric(Age), y = Duration)) + geom_point() +
+ggplot(flights %>% filter(Duration <= 125), aes(x = as.numeric(Age), y = Duration)) + geom_point() +
   ylim(0, 125) + xlab("Age of Drone") + ylab("Duration of Flight (scale limited to 125)") +
   labs(title = "Duration of Flight by Age of Drone")
 
