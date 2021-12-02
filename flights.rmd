@@ -1,0 +1,100 @@
+---
+title: "Drone Fight Analysis"
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r loadData, echo=FALSE, warning=FALSE, message=FALSE}
+knitr::opts_chunk$set(echo = FALSE, comment = "", warning = FALSE, message = FALSE)
+library(readr)
+library(lubridate)
+library(dplyr)
+library(shiny)
+library(data.table)
+library(DT)
+library(readxl)
+library(ggplot2)
+source("DroneTaggingFilterFunctions.r")
+result <- readRDS("result.rds")
+```
+Observations
+```{r observationData}
+print(paste("# of observations:", result$nObs))
+print(paste("# of drones (tags):", result$nTags))
+print(paste("# of 'orphan' observations (a single observation for one drone on a day:", result$nOneObs))
+print("# of observations by direction:")
+print(summary(as.factor(result$data$Direction)))
+
+```
+One factor to consider in the analysis of the data is that the reader for a hive wasn't always working.
+
+```{r obsByDate}
+temp <- result$data %>% mutate(Hive = as.factor(HexAddress)) %>%
+  group_by(FlightDate, Hive) %>% select(FlightDate, Hive) %>%
+  summarize(Count = n())
+earliest11 <- min(temp %>% filter(Hive == 11) %>% pull(FlightDate))
+latest11 <- max(temp %>% filter(Hive == 11) %>% pull(FlightDate))
+ggplot(temp, aes(fill = Hive, y = Count, x = FlightDate)) + 
+  geom_bar(position = "stack", stat = "identity") +
+  labs(title = "Observations by Date by Hive", x = "Date", y = "# Observations")
+print(paste("Earliest Date of Observations for Hive 11:", earliest11))
+print(paste("Lastest Date of Observations for Hive 11:", latest11))
+ggplot(temp %>% filter(FlightDate >= earliest11 & FlightDate <= latest11), aes(fill = Hive, y = Count, x = FlightDate)) + 
+  geom_bar(position = "stack", stat = "identity") +
+  labs(title = paste("Observations by Date by Hive from", earliest11, "through", latest11), 
+       x = "Date", y = "# Observations")
+```
+Concerns this creates:
+Distorts measures of drift (movement between hives)
+Distorts # of flights per bee
+Distorts # flights by age
+How to address?  Focus on good reader Hive 10?
+
+**Flights**    Flights are defined/measured based on a departure observation followed by an arrival
+observation for the same bee on the same day.  
+```{r flights1}
+flights <- result$flights %>% mutate(DepHive = as.factor(DepHive), 
+                                     ArrHive = as.factor(ArrHive),
+                                     Duration = as.numeric(Duration)/60)
+print(paste("# Flights:", nrow(flights)))
+print(paste("# of observations used in these flight (2 x nFlights):", 2 * nrow(flights)))
+print(paste("% of observations used in these flight:", round(100 * 2 * nrow(flights) / result$nObs, 0)))
+print(paste("# Bees with flights:", length(unique(flights$TAG))))
+```
+
+
+## How many flights does a bee take
+The following are different ways of looking at the number of flights bees took.
+```{r FlightsPerBee}
+temp <- flights %>% group_by(TAG) %>% summarise(Count = n())
+print(summary(temp$Count))
+ggplot2::qplot(temp$Count, bins = 30) + xlab("Number of Flights Taken") +
+  ylab("Number of Bees Taking Number of Flights on Horizontal Axis") +
+  labs(title = "Frequency of Number of Flights Taken")
+ggplot(temp, aes(x = "All Bees", y = Count)) + geom_boxplot() + ylab("Number of Flights") +
+  xlab("") + labs(title = "Boxplot of Number of Flights By a Drone")
+```
+```{r FlightsByBee}
+ggplot(flights, aes(x = Departure, y = TAG)) + 
+  geom_point(aes(colour = DepHive, size = as.numeric(Duration)))
+```
+
+## How long (duration) are the flights?
+```{r flightDuration}
+print("Duration of flights in minutes")
+print(summary(as.numeric(flights$Duration)))
+
+ggplot(flights, aes(x = "All Bees", y = Duration)) + geom_boxplot() + ylab("Number of Flights") +
+  xlab("Duration (mins)") + labs(title = "Boxplot of Duration of Flights")
+
+ggplot2::qplot(flights %>% filter(Duration <= 120) %>% pull(Duration), bins = 30) + xlab("Duration of Flights") +
+  ylab("Number of Flights by Flight Duration") +
+  labs(title = "Frequency By Flight Duration (max 120 minutes)")
+
+ggplot(flights, aes(x = as.numeric(Age), y = Duration)) + geom_point() +
+  ylim(0, 125) + xlab("Age of Drone") + ylab("Duration of Flight (scale limited to 125)") +
+  labs(title = "Duration of Flight by Age of Drone")
+
+```
+

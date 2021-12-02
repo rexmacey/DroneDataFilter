@@ -1,0 +1,7 @@
+UIDs should be 21 characters.  Some of The UIDs in the tag file are not.  Starting with the UIDs that are too short,  if we find one and only
+UID in the main data file whose first n characters match the short tag UID (where n is the length of the short tag UID),  we assume the short UID should 
+be the UID found in the main data file.  For long UIDs (> 21 characters) in tag file, if we can find one and only UID in the main data file whose 21 
+characters match the first 21 characters of a long tag UID then we assume the first 21 characters of the tag file's UID should be the UID
+in the main data file.
+
+Duplicate UIDs can be explained by reusing chips (tags). 

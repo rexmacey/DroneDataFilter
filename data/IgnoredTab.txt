@@ -1,0 +1,29 @@
+All data in all the CSVs are read.  Observations are ignored for a variety of reasons: 
+* Timestamp.UTC, UID or ReaderID is NA - records don't have useful data    
+* Duplicates - Because some CSV files were copied    
+* March 2021 - I have removed observations with time stamps with 2021-03. This is different from removing CSV files with 2021-03 in their name.    
+* Test chips - Remove data related to the following UIDs (chopstick data).      
+    + 25SQCMICSBBF0360056C4    
+    + 25SQCMICSBB49C80056CD    
+* DNA tests - Remove tags that were put on workers for Dr. Leavey’s DNA study:
+    + 25SQCMICSBBCF5D005ADF    
+    + 25SQCMICSBB6B2A005B08    
+    + 25SQCMICSBB8AE2005AE        
+    + 25SQCMICSBB3762005B0    
+    + 25SQCMICSBB0B45005B09    
+    + 25SQCMICSBB0825005A    
+    + 25SQCMICSBB0E68005AB    
+    + 25SQCMICSBB9246005AC    
+    + 25SQCMICSBBAB48005A    
+    + 25SQCMICSBB4A3C00    
+    + 25SQCMICSBBEA8D005AE0    
+    + 25SQCMICSBB6E07005AB    
+    + 25SQCMICSBB684A005AF    
+    + 25SQCMICSBBAED9005AB    
+    + 25SQCMICSBB4D9E005B0    
+    + 25SQCMICSBBC8FB005AF    
+    + 25SQCMICSBB5298005    
+    + 25SQCMICSBB2A53005AE    
+    + 25SQCMICSBB92FE005A    
+    + 25SQCMICSBBF1F5005AC  
+* Timestamp.UTC, FirstTimeFound, or LastTimeFound are not 23 characters.

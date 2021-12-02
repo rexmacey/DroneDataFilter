@@ -1,0 +1,3 @@
+TAG = "NoTagRecordFound" means there was no corresponding UID found in the keyfordronetag file.
+TAG = "NoTagBeforeFirstTimeDate" means the date of the FirstTimeFound value precedes the birthdate of the done as shown in the keyfordronetag data.  This is illogical 
+casting the data for this record into doubt.
