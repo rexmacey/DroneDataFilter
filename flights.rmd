@@ -8,6 +8,8 @@ output:
 ```{r loadData, echo=FALSE, warning=FALSE, message=FALSE}
 knitr::opts_chunk$set(echo = FALSE, comment = "", warning = FALSE, message = FALSE)
 library(readr)
+library(chron)
+library(hms)
 library(lubridate)
 library(dplyr)
 library(shiny)
@@ -98,6 +100,20 @@ ggplot2::qplot(flights %>% filter(Duration <= 120) %>% pull(Duration), bins = 30
 ggplot(flights %>% filter(Duration <= 125), aes(x = as.numeric(Age), y = Duration)) + geom_point() +
   ylim(0, 125) + xlab("Age of Drone") + ylab("Duration of Flight (scale limited to 125)") +
   labs(title = "Duration of Flight by Age of Drone")
+
+```
+
+## When do they fly (time of departure)
+The times of departure have been rounded to 15 minute increments.  Per the following chart there 
+are a few flights at almost every time of day.  The chart after truncates the times to 9:00 to 20:00.
+```{r flightDeparture}
+temp <- flights %>% mutate(DepInterval = round_date(Departure, "15 minutes")) %>%
+                    mutate(DepInterval = hms::as_hms(DepInterval)) 
+temp1 <- temp %>% group_by(DepInterval) %>% summarize(Count = n())
+print(summary(temp1$DepInterval))
+ggplot(temp1, aes(x = DepInterval, y = Count)) + geom_bar(stat = "identity")
+ggplot(temp1 %>% filter(DepInterval >= as_hms("09:00:00") & DepInterval <= as_hms("20:00:00")), aes(x = DepInterval, y = Count)) + 
+  geom_bar(stat = "identity")
 
 ```
 
