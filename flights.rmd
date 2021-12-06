@@ -19,6 +19,7 @@ library(readxl)
 library(ggplot2)
 source("DroneTaggingFilterFunctions.r")
 result <- readRDS("result.rds")
+weather <- readRDS("data/weather.rds")
 ```
 Observations
 ```{r observationData}
@@ -115,5 +116,26 @@ ggplot(temp1, aes(x = DepInterval, y = Count)) + geom_bar(stat = "identity")
 ggplot(temp1 %>% filter(DepInterval >= as_hms("09:00:00") & DepInterval <= as_hms("20:00:00")), aes(x = DepInterval, y = Count)) + 
   geom_bar(stat = "identity")
 
+```
+# Weather    
+Weather data comes from the [Georgia Tech WeatherSTEM](https://gatech.weatherstem.com) site. We use the
+university's Campus Recreaton Center location.  Descriptions of the data items can be found [here](https://gatech.weatherstem.com/data).  We extracted data in 1 minute increments from `r min(weather$Timestamp)` to `r max(weather$Timestamp)`.  Below is a summary of the data.  
+
+```{r weatherSummary}
+summary(weather %>% select(-"Record.ID"))
+```
+
+```{r joinFlightsWithWeather}
+# The following lines convert the Departure to Eastern
+temp <- flights %>% mutate(Departure = Departure + hours(4)) %>% 
+  mutate(Departure = round_date(Departure, "minute")) %>% 
+  select(Departure, Birthday, Age, Duration)
+temp$Departure <- with_tz(temp$Departure, "America/New_York")
+
+temp1 <- weather %>% 
+  select(Timestamp, X10.Minute.Wind.Gust, Anemometer, Ground.Temperature, 
+                            Hygrometer, Rain.Gauge, Thermometer, Wind.Chill)
+
+temp2 <- left_join(temp, temp1, by = c("Departure" = "Timestamp"))
 ```
 
